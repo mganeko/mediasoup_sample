@@ -43,8 +43,12 @@ or
 $ npm start
 ```
 
+サーバーを起動します。Webサーバー、WebSocketによるシグナリングサーバー、SFUサーバーを兼ねています。
+
+
 ## access with borwser
 
 * open [http://localhost:3000/](http://localhost:3000/) with Chrome or Firefox.
 * click [Start Video] button, then [Connect] button
 
+ブラウザ(Chrome か Firefox)で [http://localhost:3000/](http://localhost:3000/) にアクセスします。
