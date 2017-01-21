@@ -8,6 +8,15 @@ Node.jsで動くWebRTC SFU mediasoupのサンプルです。
 
 # Installation
 
+## git clone
+```
+git clone https://github.com/mganeko/mediasoup_sample.git
+cd mediasoup_sample/
+```
+git cloneします。
+
+## install npm modules
+
 ```
 $ npm install ws
 $ npm install express
@@ -18,7 +27,10 @@ or
 $ npm install
 ```
 
-Python 2 is needed for installing mediasoup.
+Python 2, make, g++ or clang are required for installing mediasoup.
+
+npm モジュールをインストールします。mediasoupのインストールには Python 2, make, g++かclang が必要です。
+
 
 # How to use
 
