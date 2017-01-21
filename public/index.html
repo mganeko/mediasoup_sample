@@ -178,9 +178,11 @@
         console.log('-- peer.ontrack()');
         let stream = event.streams[0];
         logStream('remotestream of ontrack()', stream);
+        if ( (stream.getVideoTracks().length > 0) && (stream.getAudioTracks().length > 0) ) {
+          //playVideo(remoteVideo, stream);
+          addRemoteVideo(stream.id, stream);
+        }
         
-        //playVideo(remoteVideo, stream);
-        addRemoteVideo(stream.id, stream);
       };
     }
     else {
