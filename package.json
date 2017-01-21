@@ -1,0 +1,29 @@
+{
+  "name": "mediasoup_sample",
+  "version": "1.0.0",
+  "description": "WebRTC SFU mediasoup sample",
+  "main": "mediasoup_sample_multi.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node mediasoup_sample_multi.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mganeko/mediasoup_sample.git"
+  },
+  "keywords": [
+    "Node.js",
+    "WebRTC"
+  ],
+  "author": "mganeko",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mganeko/mediasoup_sample/issues"
+  },
+  "homepage": "https://github.com/mganeko/mediasoup_sample",
+  "dependencies": {
+    "express": "^4.14.0",
+    "mediasoup": "^0.3.0-pre4",
+    "ws": "^1.1.1"
+  }
+}
