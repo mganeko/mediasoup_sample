@@ -56,8 +56,8 @@ function getClientCount() {
 }
 
 wsServer.on('connection', function connection(ws) {
-
   console.log('client connected. id=' + getId(ws) + '  , total clients=' + getClientCount());
+  
   ws.on('close', function () {
     console.log('client closed. id=' + getId(ws) + '  , total clients=' + getClientCount());
     cleanUpPeer(ws);
@@ -79,101 +79,11 @@ wsServer.on('connection', function connection(ws) {
     }
     else if (inMessage.type === 'offer') {
       console.log('got Offer from id=' + id);
-      const option = { usePlanB: inMessage.planb };
-      
-      let desc = new RTCSessionDescription({
-        type : "offer",
-        sdp  : inMessage.sdp
-      });
-      console.log('RTCSessionDescription --');
-      let peerconnection = new RTCPeerConnection(soupRoom, id, option);
-      peerconnection.on('close', function(err) {
-        console.log('-- PeerConnection.closed,  err:', err);
-      });
-      peerconnection.on('signalingstatechange', function() {
-        console.log('-- PeerConnection.signalingstatechanged, state=' + peerconnection.signalingState);
-      });      
-      
-      console.log('--- create RTCPeerConnection --');
-      console.log('-- peers in the room = ' + soupRoom.peers.length);
-      
-      addPeerConnection(id, peerconnection);
-      
-      // Set the remote SDP offer
-      peerconnection.setRemoteDescription(desc)
-      .then(() => {
-        dumpPeer(peerconnection.peer, 'peer.dump after setRemoteDescrition(offer):');
-        return peerconnection.createAnswer();
-      })
-      .then((desc) => {
-        return peerconnection.setLocalDescription(desc);
-        
-      })
-      .then(() => {
-        dumpPeer(peerconnection.peer, 'peer.dump after setLocalDescrition(answer):');
-
-        // Answer the participant request with the SDP answer
-        sendSDP(ws, peerconnection.localDescription);
-        console.log('-- peers in the room = ' + soupRoom.peers.length);
-      })
-      .catch((error) => {
-        console.error("error handling SDP offer from participant: %s", error);
-        
-        // Reject the participant
-        // Close the peerconnection
-        peerconnection.close();
-
-        deletePeerConnection(id);
-      });
-
-      // Handle "negotiationneeded" event
-      peerconnection.on("negotiationneeded", () => {
-        console.log('-- PeerConnection.negotiationneeded!!');
-        
-        peerconnection.createOffer()
-        .then((desc) => {
-          return peerconnection.setLocalDescription(desc);
-        })
-        .then(() => {
-          dumpPeer(peerconnection.peer, 'peer.dump after setLocalDescrition(re-offer):');
-
-          // Send the SDP re-offer to the endpoint and expect a SDP answer
-          console.log('re-offer to id=' + id);
-
-          sendSDP(ws, peerconnection.localDescription);
-        })
-        .catch((error) => {
-          console.error("error handling SDP re-offer to participant: %s", error);
-        
-          //// Close the peerconnection
-          //peerconnection.close();
-          //deletePeerConnection(id);
-        });
-        
-      });
+      handleOffer(ws, inMessage);
     }
     else if (inMessage.type === 'answer') {
       console.log('got Answer from id=' + id);
-      let peerconnection = getPeerConnection(id);
-      if (! peerconnection) {
-        console.warn('WARN: connection not found. id=', id);
-        return;
-      }
-
-      let desc = new RTCSessionDescription({
-        type : "answer",
-        sdp  : inMessage.sdp
-      });
-      
-      peerconnection.setRemoteDescription(desc)
-      .then( function() {
-        console.log('setRemoteDescription for Answer OK');
-        console.log('-- peers in the room = ' + soupRoom.peers.length);
-
-        dumpPeer(peerconnection.peer, 'peer.dump after setRemoteDescription(re-answer):');
-      })
-      .catch( (err) => console.eror('setRemoteDescription for Answer ERROR:', err)
-      );
+      handleAnswer(ws, inMessage);
     }
     else if (inMessage.type === 'candidate') {
       console.error('MUST NOT got candidate');
@@ -192,11 +102,103 @@ function sendback(ws, message) {
 }
 
 function handleOffer(ws, message) {
+  const id = getId(ws);
+  const option = { usePlanB: message.planb };
+      
+  let desc = new RTCSessionDescription({
+    type : "offer",
+    sdp  : message.sdp
+  });
+  console.log('RTCSessionDescription --');
+  let peerconnection = new RTCPeerConnection(soupRoom, id, option);
+  peerconnection.on('close', function(err) {
+    console.log('-- PeerConnection.closed,  err:', err);
+  });
+  peerconnection.on('signalingstatechange', function() {
+    console.log('-- PeerConnection.signalingstatechanged, state=' + peerconnection.signalingState);
+  });      
+  
+  console.log('--- create RTCPeerConnection --');
+  console.log('-- peers in the room = ' + soupRoom.peers.length);
 
+  addPeerConnection(id, peerconnection);
+  
+  // Set the remote SDP offer
+  peerconnection.setRemoteDescription(desc)
+  .then(() => {
+    dumpPeer(peerconnection.peer, 'peer.dump after setRemoteDescrition(offer):');
+    return peerconnection.createAnswer();
+  })
+  .then((desc) => {
+    return peerconnection.setLocalDescription(desc);
+    
+  })
+  .then(() => {
+    dumpPeer(peerconnection.peer, 'peer.dump after setLocalDescrition(answer):');
+
+    // Answer the participant request with the SDP answer
+    sendSDP(ws, peerconnection.localDescription);
+    console.log('-- peers in the room = ' + soupRoom.peers.length);
+  })
+  .catch((error) => {
+    console.error("error handling SDP offer from participant: %s", error);
+    
+    // Reject the participant
+    // Close the peerconnection
+    peerconnection.close();
+
+    deletePeerConnection(id);
+  });
+
+  // Handle "negotiationneeded" event
+  peerconnection.on("negotiationneeded", () => {
+    console.log('-- PeerConnection.negotiationneeded!!');
+    
+    peerconnection.createOffer()
+    .then((desc) => {
+      return peerconnection.setLocalDescription(desc);
+    })
+    .then(() => {
+      dumpPeer(peerconnection.peer, 'peer.dump after setLocalDescrition(re-offer):');
+
+      // Send the SDP re-offer to the endpoint and expect a SDP answer
+      console.log('re-offer to id=' + id);
+
+      sendSDP(ws, peerconnection.localDescription);
+    })
+    .catch((error) => {
+      console.error("error handling SDP re-offer to participant: %s", error);
+    
+      //// Close the peerconnection
+      //peerconnection.close();
+      //deletePeerConnection(id);
+    });
+  });
 }
 
 function handleAnswer(ws, message) {
+  const id = getId(ws);
+  let peerconnection = getPeerConnection(id);
+  if (! peerconnection) {
+    console.warn('WARN: connection not found. id=', id);
+    return;
+  }
 
+  let desc = new RTCSessionDescription({
+    type : "answer",
+    sdp  : message.sdp
+  });
+  
+  peerconnection.setRemoteDescription(desc)
+  .then( function() {
+    console.log('setRemoteDescription for Answer OK');
+    console.log('-- peers in the room = ' + soupRoom.peers.length);
+
+    dumpPeer(peerconnection.peer, 'peer.dump after setRemoteDescription(re-answer):');
+  })
+  .catch( (err) => {
+    console.eror('setRemoteDescription for Answer ERROR:', err)
+  });
 }
 
 function dumpPeer(peer, caption) {
