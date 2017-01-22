@@ -24,7 +24,6 @@
   let remoteContainer = document.getElementById('remote_container');
   let localStream = null;
   let peerConnection = null;
-  const REMOTE_ID_DUMMY = 9999;
   
   // --- prefix -----
   navigator.getUserMedia  = navigator.getUserMedia    || navigator.webkitGetUserMedia ||
@@ -152,7 +151,6 @@
   function sendSdp(sessionDescription) {
     console.log('---sending sdp ---');
     const jsonSDP = sessionDescription.toJSON();
-    jsonSDP.sendto = REMOTE_ID_DUMMY; // DUMMY
     jsonSDP.planb = getUsePlanB();
     console.log('sending SDP:', jsonSDP);
 

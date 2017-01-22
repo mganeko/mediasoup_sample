@@ -210,18 +210,15 @@ function dumpPeer(peer, caption) {
 
 
 function addPeerConnection(id, pc) {
-  //const name = getNameFromId(id);
   Connections[id] = pc;
 }
 
 function getPeerConnection(id) {
-  //const name = getNameFromId(id);
   const pc = Connections[id];
   return pc
 }
 
 function deletePeerConnection(id) {
-  //const name = getNameFromId(id);
   delete Connections[id];  
 }
 
