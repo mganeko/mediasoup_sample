@@ -102,12 +102,16 @@ wsServer.on('connection', function connection(ws) {
       // Set the remote SDP offer
       peerconnection.setRemoteDescription(desc)
       .then(() => {
+        dumpPeer(peerconnection.peer, 'peer.dump after setRemoteDescrition(offer):');
         return peerconnection.createAnswer();
       })
       .then((desc) => {
         return peerconnection.setLocalDescription(desc);
+        
       })
       .then(() => {
+        dumpPeer(peerconnection.peer, 'peer.dump after setLocalDescrition(answer):');
+
         // Answer the participant request with the SDP answer
         sendSDP(ws, peerconnection.localDescription);
         console.log('-- peers in the room = ' + soupRoom.peers.length);
@@ -131,6 +135,8 @@ wsServer.on('connection', function connection(ws) {
           return peerconnection.setLocalDescription(desc);
         })
         .then(() => {
+          dumpPeer(peerconnection.peer, 'peer.dump after setLocalDescrition(re-offer):');
+
           // Send the SDP re-offer to the endpoint and expect a SDP answer
           console.log('re-offer to id=' + id);
 
@@ -163,6 +169,8 @@ wsServer.on('connection', function connection(ws) {
       .then( function() {
         console.log('setRemoteDescription for Answer OK');
         console.log('-- peers in the room = ' + soupRoom.peers.length);
+
+        dumpPeer(peerconnection.peer, 'peer.dump after setRemoteDescription(re-answer):');
       })
       .catch( (err) => console.eror('setRemoteDescription for Answer ERROR:', err)
       );
@@ -187,8 +195,17 @@ function handleOffer(ws, message) {
 
 }
 
-function handleAnswe(ws, message) {
+function handleAnswer(ws, message) {
 
+}
+
+function dumpPeer(peer, caption) {
+  /*-- for debug --
+  peer.dump()
+  .then((obj) => {
+    console.log(caption, obj)
+  });
+  ---*/
 }
 
 
