@@ -30,6 +30,7 @@ let clientIndex = 0;
 
 // ----- mediasoup ----
 let server = mediasoup.Server();
+//let server = mediasoup.Server({numWorkers: 2}); // trial for changing number of workers
 server.createRoom(roomOptions)
 .then((room) => {
   soupRoom = room;
@@ -57,7 +58,7 @@ function getClientCount() {
 
 wsServer.on('connection', function connection(ws) {
   console.log('client connected. id=' + getId(ws) + '  , total clients=' + getClientCount());
-  
+
   ws.on('close', function () {
     console.log('client closed. id=' + getId(ws) + '  , total clients=' + getClientCount());
     cleanUpPeer(ws);
