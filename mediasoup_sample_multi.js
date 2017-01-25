@@ -69,7 +69,7 @@ wsServer.on('connection', function connection(ws) {
   ws.on('message', function incoming(data) {
     const inMessage = JSON.parse(data);
     const id = getId(ws);
-    console.log('received id=%d type=%s',  id, inMessage.type);
+    console.log('received id=%s type=%s',  id, inMessage.type);
 
     if (inMessage.type === 'call') {
       console.log('got call from id=' + id);
@@ -128,6 +128,9 @@ function handleOffer(ws, message) {
   peerconnection.setRemoteDescription(desc)
   .then(() => {
     dumpPeer(peerconnection.peer, 'peer.dump after setRemoteDescrition(offer):');
+    peerconnection.peer.on('newrtpsender', function(sender) {
+      console.log('new RtpSender for id=' + id);
+    });
     return peerconnection.createAnswer();
   })
   .then((desc) => {
@@ -153,7 +156,7 @@ function handleOffer(ws, message) {
 
   // Handle "negotiationneeded" event
   peerconnection.on("negotiationneeded", () => {
-    console.log('-- PeerConnection.negotiationneeded!!');
+    console.log('-- PeerConnection.negotiationneeded!! id=' + id);
     
     peerconnection.createOffer()
     .then((desc) => {
@@ -192,7 +195,7 @@ function handleAnswer(ws, message) {
   
   peerconnection.setRemoteDescription(desc)
   .then( function() {
-    console.log('setRemoteDescription for Answer OK');
+    console.log('setRemoteDescription for Answer OK id=' + id);
     console.log('-- peers in the room = ' + soupRoom.peers.length);
 
     dumpPeer(peerconnection.peer, 'peer.dump after setRemoteDescription(re-answer):');
@@ -209,6 +212,10 @@ function dumpPeer(peer, caption) {
     console.log(caption, obj)
   });
   ---*/
+
+  console.log(caption + ' transports=%d receivers=%d senders=%d',
+    peer.transports.length, peer.rtpReceivers.length, peer.rtpSenders.length
+  );
 }
 
 
