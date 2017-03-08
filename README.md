@@ -3,8 +3,9 @@ Multiple participants sample for WebRTC SFU mediasoup with node.js
 
 * mediasoup GitHub [https://github.com/ibc/mediasoup](https://github.com/ibc/mediasoup)
 * mediasoup Web site [https://mediasoup.org](https://mediasoup.org)
+* This sample works with mediasoup v0.3. This does not work with mediasoup v0.5 yet.
 
-Node.jsで動くWebRTC SFU mediasoupのサンプルです。
+Node.jsで動くWebRTC SFU mediasoupのサンプルです。v0.3用であり、v0.5ではまだ動作しません。
 
 # Installation
 
