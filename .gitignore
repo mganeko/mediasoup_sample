@@ -28,7 +28,13 @@ build/Release
 
 # Dependency directories
 node_modules
+node_modules_v03
 jspm_packages
+
+# trial files
+down.html
+up.html
+mediasoup_sample_cast.js
 
 # Optional npm cache directory
 .npm
