@@ -53,7 +53,7 @@
     if (message.type === 'response') {
       // --- not used ----
       console.warn('NOT USED');
-      makeOffer();
+      //makeOffer();
     }
     if (message.type === 'offer') {
       // -- got offer ---
@@ -64,8 +64,9 @@
     else if (message.type === 'answer') {
       // --- got answer ---
       console.log('Received answer ...');
-      let answer = new RTCSessionDescription(message);
-      setAnswer(answer);
+      console.warn('NOT USED');
+      //let answer = new RTCSessionDescription(message);
+      //setAnswer(answer);
     }
   };
   
@@ -254,6 +255,7 @@
     return peer;
   }
 
+  /*---- NOT USED ---
   function makeOffer() {
     peerConnection = prepareNewConnection();
     peerConnection.createOffer()
@@ -269,6 +271,7 @@
       console.error(err);
     });
   }
+  ---- NOT USED ---*/
 
   function setOffer(sessionDescription) {
     if (peerConnection) {
@@ -308,6 +311,7 @@
     });
   }
 
+  /*--- NOT USED --- 
   function setAnswer(sessionDescription) {
     if (! peerConnection) {
       console.error('peerConnection NOT exist!');
@@ -320,18 +324,13 @@
       console.error('setRemoteDescription(answer) ERROR: ', err);
     });
   }
+  ---- NOT USED --*/
   
   // start PeerConnection
   function connect() {
-    //call();
     callWithCapabilitySDP();
 
     updateButtons();
-  }
-  
-  function call() {
-    console.log('calling..');
-    sendJson({type: "call", planb: getUsePlanB()});
   }
 
   function callWithCapabilitySDP() {
