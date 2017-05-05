@@ -79,7 +79,8 @@ wsServer.on('connection', function connection(ws) {
       //sendback(ws, message);
       // -- prepare PeerConnection and send SDP --
       preparePeer(ws, inMessage);
-      //if (peerconnection) { // MUST USE Promise
+      //NOT here, MUST USE Promise to sendOffer()
+      //if (peerconnection) { 
       //  sendOffer(ws, peerconnection);
       //}
     }
@@ -164,7 +165,7 @@ function sendOffer(ws, peerconnection) {
   })
   .catch((error) => {
     console.error("error handling SDP offer to participant: %s", error);
-  
+
     // Close the peerconnection
     peerconnection.reset();
     peerconnection.close();
