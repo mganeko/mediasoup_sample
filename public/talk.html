@@ -22,7 +22,6 @@
   const useTrickleICE = false;
 
   let localVideo = document.getElementById('local_video');
-  //let remoteContainer = document.getElementById('remote_container');
   let stateSpan = document.getElementById('state_span');
   let localStream = null;
   let peerConnection = null;
@@ -53,7 +52,6 @@
     if (message.type === 'response') {
       // --- not used ----
       console.warn('NOT USED');
-      //makeOffer();
     }
     if (message.type === 'offer') {
       // -- got offer ---
@@ -65,8 +63,6 @@
       // --- got answer ---
       console.log('Received answer ...');
       console.warn('NOT USED');
-      //let answer = new RTCSessionDescription(message);
-      //setAnswer(answer);
     }
   };
   
@@ -180,7 +176,6 @@
         let stream = event.streams[0];
         logStream('remotestream of ontrack()', stream);
         if ( (stream.getVideoTracks().length > 0) && (stream.getAudioTracks().length > 0) ) {
-          //addRemoteVideo(stream.id, stream);
           console.warn('IGNORE remote track');
         }
         
@@ -191,8 +186,6 @@
         console.log('-- peer.onaddstream()');
         let stream = event.stream;
         logStream('remotestream of onaddstream()', stream);
-        
-        //addRemoteVideo(stream.id, stream);
         console.warn('IGNORE remote stream');
       };
     }
@@ -252,7 +245,6 @@
     peer.onremovestream = function(event) {
       console.log('-- peer.onremovestream()');
       let stream = event.stream;
-      //removeRemoteVideo(stream.id, stream);
       console.warn('IGNORE onremovestream');
     };
     
@@ -267,24 +259,6 @@
     }
     return peer;
   }
-
-  /*---- NOT USED ---
-  function makeOffer() {
-    peerConnection = prepareNewConnection();
-    peerConnection.createOffer()
-    .then(function (sessionDescription) {
-      console.log('createOffer() succsess in promise');
-      return peerConnection.setLocalDescription(sessionDescription);
-    }).then(function() {
-      console.log('setLocalDescription() succsess in promise');
-      // -- Trickle ICE の場合は、初期SDPを相手に送る -- 
-      // -- Vanilla ICE の場合には、まだSDPは送らない --
-      //sendSdp(peerConnection.localDescription);
-    }).catch(function(err) {
-      console.error(err);
-    });
-  }
-  ---- NOT USED ---*/
 
   function setOffer(sessionDescription) {
     let waitForCandidates = true;
@@ -342,21 +316,6 @@
     });
   }
 
-  /*--- NOT USED --- 
-  function setAnswer(sessionDescription) {
-    if (! peerConnection) {
-      console.error('peerConnection NOT exist!');
-      return;
-    }
-    peerConnection.setRemoteDescription(sessionDescription)
-    .then(function() {
-      console.log('setRemoteDescription(answer) succsess in promise');
-    }).catch(function(err) {
-      console.error('setRemoteDescription(answer) ERROR: ', err);
-    });
-  }
-  ---- NOT USED --*/
-  
   // start PeerConnection
   function connect() {
     callWithCapabilitySDP();
@@ -387,8 +346,6 @@
       console.log('Hang up.');
       peerConnection.close();
       peerConnection = null;
-      
-      //removeAllRemoteVideo();
     }
     else {
       console.warn('peer NOT exist.');
@@ -420,41 +377,6 @@
     });
     }
   }
- 
-  /*--
-  function addRemoteVideo(id, stream) {
-    let element = document.createElement('video');
-    remoteContainer.appendChild(element);
-    element.id = 'remote_' + id;
-    element.width = 320;
-    element.height = 240;
-    element.srcObject = stream;
-    element.play();
-    element.volume = 0;
-    element.controls = true;
-  }
-  
-  function removeRemoteVideo(id, stream) {
-    console.log(' ---- removeRemoteVideo() id=' + id);
-    let element = document.getElementById('remote_' + id);
-    if (element) {
-      element.pause();
-      element.srcObject = null;
-      remoteContainer.removeChild(element);
-    }
-    else {
-      console.log('child element NOT FOUND');
-    }
-  }
-
-  function removeAllRemoteVideo() {
-    while (remoteContainer.firstChild) {
-      remoteContainer.firstChild.pause();
-      remoteContainer.firstChild.srcObject = null;
-      remoteContainer.removeChild(remoteContainer.firstChild);
-    }
-  }
-  --*/
 
   function updateButtons() {
     if (peerConnection) {
