@@ -74,13 +74,18 @@ wsServer.on('connection', function connection(ws) {
     if (inMessage.type === 'call') {
       console.log('got call from id=' + id);
       let message = { sendto: id, type: 'response' };
-      console.log('send response to id=' + id);
+      console.log('send Offer to id=' + id);
 
-      sendback(ws, message);
+      //sendback(ws, message);
+      // -- prepare PeerConnection and send SDP --
+      preparePeer(ws, inMessage);
+      //if (peerconnection) { // MUST USE Promise
+      //  sendOffer(ws, peerconnection);
+      //}
     }
     else if (inMessage.type === 'offer') {
       console.log('got Offer from id=' + id);
-      handleOffer(ws, inMessage);
+      console.error('MUST NOT got offer');
     }
     else if (inMessage.type === 'answer') {
       console.log('got Answer from id=' + id);
@@ -102,81 +107,115 @@ function sendback(ws, message) {
   ws.send(str);
 }
 
-function handleOffer(ws, message) {
+// --- for v1.x ---
+const CRLF = String.fromCharCode(13) + String.fromCharCode(10);
+const peerCapSDP = [
+  "m=video 52585 UDP/TLS/RTP/SAVPF 96 98 100 102 127 97 99 101 125",
+  //"a=setup:actpass",
+  "a=mid:video",
+  //"a=extmap:2 urn:ietf:params:rtp-hdrext:toffset",
+  //"a=extmap:3 http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time",
+  //"a=extmap:4 urn:3gpp:video-orientation",
+  //"a=extmap:5 http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01",
+  //"a=extmap:6 http://www.webrtc.org/experiments/rtp-hdrext/playout-delay",
+  //"a=sendrecv",
+  "a=rtcp-mux",
+  "a=rtcp-rsize",
+  "a=rtpmap:96 VP8/90000",
+  "a=rtcp-fb:96 ccm fir",
+  "a=rtcp-fb:96 nack",
+  "a=rtcp-fb:96 nack pli",
+  "a=rtcp-fb:96 goog-remb",
+  "a=rtcp-fb:96 transport-cc",
+  "a=rtpmap:98 VP9/90000",
+  "a=rtcp-fb:98 ccm fir",
+  "a=rtcp-fb:98 nack",
+  "a=rtcp-fb:98 nack pli",
+  "a=rtcp-fb:98 goog-remb",
+  "a=rtcp-fb:98 transport-cc",
+  "a=rtpmap:100 H264/90000",
+  "a=rtcp-fb:100 ccm fir",
+  "a=rtcp-fb:100 nack",
+  "a=rtcp-fb:100 nack pli",
+  "a=rtcp-fb:100 goog-remb",
+  "a=rtcp-fb:100 transport-cc",
+  "a=fmtp:100 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f",
+  "a=rtpmap:102 red/90000",
+  "a=rtpmap:127 ulpfec/90000",
+  "a=rtpmap:97 rtx/90000",
+  "a=fmtp:97 apt=96",
+  "a=rtpmap:99 rtx/90000",
+  "a=fmtp:99 apt=98",
+  "a=rtpmap:101 rtx/90000",
+  "a=fmtp:101 apt=100",
+  "a=rtpmap:125 rtx/90000",
+  "a=fmtp:125 apt=102",
+].join(CRLF);
+
+function preparePeer(ws, message) {
   const id = getId(ws);
-  const option = { usePlanB: message.planb };
-      
-  let desc = new RTCSessionDescription({
-    type : "offer",
-    sdp  : message.sdp
+  const planb = message.planb;
+
+  let peer = soupRoom.Peer(id);
+  let peerconnection = new RTCPeerConnection({
+    peer     : peer,
+    usePlanB : planb
   });
-  console.log('RTCSessionDescription --');
-  let peerconnection = new RTCPeerConnection(soupRoom, id, option);
+  console.log('--- create RTCPeerConnection --');
+  console.log('-- peers in the room = ' + soupRoom.peers.length);
+
   peerconnection.on('close', function(err) {
     console.log('-- PeerConnection.closed,  err:', err);
   });
   peerconnection.on('signalingstatechange', function() {
     console.log('-- PeerConnection.signalingstatechanged, state=' + peerconnection.signalingState);
-  });      
-  
-  console.log('--- create RTCPeerConnection --');
-  console.log('-- peers in the room = ' + soupRoom.peers.length);
+  });
+  peerconnection.on("negotiationneeded", () => {
+    console.log('-- PeerConnection.negotiationneeded!! id=' + id);
 
-  addPeerConnection(id, peerconnection);
-  
-  // Set the remote SDP offer
-  peerconnection.setRemoteDescription(desc)
+    // --- send SDP here ---
+    sendOffer(ws, peerconnection);
+  });
+
+  //peerconnection.setCapabilities(peerCapabilities) // <-- peerconnection.setCapabilities() ERROR:
+    // Error: invalid capabilities SDP: Error: invalid sdp-transform object:
+    // TypeError: Cannot read property 'forEach' of undefined
+  peerconnection.setCapabilities(peerCapSDP)
   .then(() => {
-    dumpPeer(peerconnection.peer, 'peer.dump after setRemoteDescrition(offer):');
-    peerconnection.peer.on('newrtpsender', function(sender) {
-      console.log('new RtpSender for id=' + id);
-    });
-    return peerconnection.createAnswer();
+    console.log('peerconnection.setCapabilities() OK');
+
+    addPeerConnection(id, peerconnection);
+    sendOffer(ws, peerconnection);
+  })
+  .catch( (err) => {
+    console.log('peerconnection.setCapabilities() ERROR:', err);
+    peerconnection.close();
+  })
+}
+
+function sendOffer(ws, peerconnection) {
+  const id = getId(ws);
+  console.log('offer to id=' + id);
+  peerconnection.createOffer({
+    offerToReceiveAudio : 1,
+    offerToReceiveVideo : 1
   })
   .then((desc) => {
     return peerconnection.setLocalDescription(desc);
-    
   })
   .then(() => {
-    dumpPeer(peerconnection.peer, 'peer.dump after setLocalDescrition(answer):');
+    dumpPeer(peerconnection.peer, 'peer.dump after createOffer');
 
-    // Answer the participant request with the SDP answer
     sendSDP(ws, peerconnection.localDescription);
-    console.log('-- peers in the room = ' + soupRoom.peers.length);
   })
   .catch((error) => {
-    console.error("error handling SDP offer from participant: %s", error);
-    
-    // Reject the participant
-    // Close the peerconnection
-    peerconnection.close();
+    console.error("error handling SDP offer to participant: %s", error);
+  
+    //// Close the peerconnection
+    //peerconnection.close();
+    //deletePeerConnection(id);
 
-    deletePeerConnection(id);
-  });
-
-  // Handle "negotiationneeded" event
-  peerconnection.on("negotiationneeded", () => {
-    console.log('-- PeerConnection.negotiationneeded!! id=' + id);
-    
-    peerconnection.createOffer()
-    .then((desc) => {
-      return peerconnection.setLocalDescription(desc);
-    })
-    .then(() => {
-      dumpPeer(peerconnection.peer, 'peer.dump after setLocalDescrition(re-offer):');
-
-      // Send the SDP re-offer to the endpoint and expect a SDP answer
-      console.log('re-offer to id=' + id);
-
-      sendSDP(ws, peerconnection.localDescription);
-    })
-    .catch((error) => {
-      console.error("error handling SDP re-offer to participant: %s", error);
-    
-      //// Close the peerconnection
-      //peerconnection.close();
-      //deletePeerConnection(id);
-    });
+    peerconnection.reset();
   });
 }
 
@@ -188,6 +227,7 @@ function handleAnswer(ws, message) {
     return;
   }
 
+  console.log("remote SDP=" + message.sdp);
   let desc = new RTCSessionDescription({
     type : "answer",
     sdp  : message.sdp
@@ -198,10 +238,10 @@ function handleAnswer(ws, message) {
     console.log('setRemoteDescription for Answer OK id=' + id);
     console.log('-- peers in the room = ' + soupRoom.peers.length);
 
-    dumpPeer(peerconnection.peer, 'peer.dump after setRemoteDescription(re-answer):');
+    dumpPeer(peerconnection.peer, 'peer.dump after setRemoteDescription(answer):');
   })
   .catch( (err) => {
-    console.eror('setRemoteDescription for Answer ERROR:', err)
+    console.error('setRemoteDescription for Answer ERROR:', err)
   });
 }
 

@@ -23,7 +23,7 @@
   "homepage": "https://github.com/mganeko/mediasoup_sample",
   "dependencies": {
     "express": "^4.14.0",
-    "mediasoup": "^0.3.0-pre4",
+    "mediasoup": "^1.1.0",
     "ws": "^1.1.1"
   }
 }
