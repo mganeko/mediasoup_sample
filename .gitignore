@@ -35,6 +35,7 @@ jspm_packages
 down.html
 up.html
 mediasoup_sample_cast.js
+trial
 
 # Optional npm cache directory
 .npm
