@@ -274,8 +274,14 @@
   ---- NOT USED ---*/
 
   function setOffer(sessionDescription) {
+    let waitForCandidates = true;
+
     if (peerConnection) {
       console.log('peerConnection alreay exist, reuse it');
+      if (peerConnection.remoteDescription && (peerConnection.remoteDescription.type === 'offer')) {
+        // got re-offer, so DO NOT wait for candidates even using Vanilla ICE
+        waitForCandidates = false;
+      }
     }
     else {
       console.log('prepare new PeerConnection');
@@ -284,13 +290,13 @@
     peerConnection.setRemoteDescription(sessionDescription)
     .then(function() {
       console.log('setRemoteDescription(offer) succsess in promise');
-      makeAnswer();
+      makeAnswer(waitForCandidates);
     }).catch(function(err) {
       console.error('setRemoteDescription(offer) ERROR: ', err);
     });
   }
   
-  function makeAnswer() {
+  function makeAnswer(waitForCandidates) {
     console.log('sending Answer. Creating remote session description...' );
     if (! peerConnection) {
       console.error('peerConnection NOT exist!');
@@ -306,6 +312,9 @@
       // -- Trickle ICE の場合は、初期SDPを相手に送る -- 
       // -- Vanilla ICE の場合には、まだSDPは送らない --
       //sendSdp(peerConnection.localDescription);
+      if (! waitForCandidates) {
+        sendSdp(peerConnection.localDescription);
+      }
     }).catch(function(err) {
       console.error(err);
     });

@@ -19,9 +19,6 @@ const RTCSessionDescription = mediasoup.webrtc.RTCSessionDescription;
 const roomOptions = require('./data/options').roomOptions;
 const peerCapabilities = require('./data/options').peerCapabilities;
 
-
-const usePlanBFlag = true;
-
 let selfId = null;
 let soupRoom = null;
 let Connections = new Array();
