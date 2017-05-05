@@ -211,7 +211,7 @@
     // --- when need to exchange SDP ---
     peer.onnegotiationneeded = function(evt) {
       console.log('-- onnegotiationneeded() ---');
-      console.warn('--- NOT handle YET ---');
+      console.warn('--- IGNORE ---');
     };
     // --- other events ----
     peer.onicecandidateerror = function (evt) {
@@ -272,7 +272,7 @@
 
   function setOffer(sessionDescription) {
     if (peerConnection) {
-      console.log('peerConnection alreay exist, but reuse it');
+      console.log('peerConnection alreay exist, reuse it');
     }
     else {
       console.log('prepare new PeerConnection');
@@ -323,15 +323,30 @@
   
   // start PeerConnection
   function connect() {
-    call();
+    //call();
+    callWithCapabilitySDP();
 
-    //makeOffer();
     updateButtons();
   }
   
   function call() {
     console.log('calling..');
     sendJson({type: "call", planb: getUsePlanB()});
+  }
+
+  function callWithCapabilitySDP() {
+    peerConnection = prepareNewConnection();
+    peerConnection.createOffer()
+    .then(function (sessionDescription) {
+      console.log('createOffer() succsess in callWithCapabilitySDP()');
+
+      // WITHOUT setLocalDesctiption(), and send to server
+      console.log('calling with Capalibity SDP ..');
+      sendJson({type: "call", planb: getUsePlanB(), capability: sessionDescription.sdp});
+    })
+    .catch(function(err) {
+      console.error('ERROR in callWithCapabilitySDP():', err);
+    });
   }
   
   // close PeerConnection

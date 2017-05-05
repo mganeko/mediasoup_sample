@@ -108,6 +108,7 @@ function sendback(ws, message) {
 }
 
 // --- for v1.x ---
+/*--
 const CRLF = String.fromCharCode(13) + String.fromCharCode(10);
 const peerCapSDP = [
   "m=video 52585 UDP/TLS/RTP/SAVPF 96 98 100 102 127 97 99 101 125",
@@ -151,10 +152,12 @@ const peerCapSDP = [
   "a=rtpmap:125 rtx/90000",
   "a=fmtp:125 apt=102",
 ].join(CRLF);
+--*/
 
 function preparePeer(ws, message) {
   const id = getId(ws);
   const planb = message.planb;
+  const capabilitySDP = message.capability;
 
   let peer = soupRoom.Peer(id);
   let peerconnection = new RTCPeerConnection({
@@ -180,7 +183,7 @@ function preparePeer(ws, message) {
   //peerconnection.setCapabilities(peerCapabilities) // <-- peerconnection.setCapabilities() ERROR:
     // Error: invalid capabilities SDP: Error: invalid sdp-transform object:
     // TypeError: Cannot read property 'forEach' of undefined
-  peerconnection.setCapabilities(peerCapSDP)
+  peerconnection.setCapabilities(capabilitySDP)
   .then(() => {
     console.log('peerconnection.setCapabilities() OK');
 
@@ -227,7 +230,7 @@ function handleAnswer(ws, message) {
     return;
   }
 
-  console.log("remote SDP=" + message.sdp);
+  //console.log("remote SDP=" + message.sdp);
   let desc = new RTCSessionDescription({
     type : "answer",
     sdp  : message.sdp
