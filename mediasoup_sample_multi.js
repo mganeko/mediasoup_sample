@@ -75,11 +75,16 @@ wsServer.on('connection', function connection(ws) {
 
       //sendback(ws, message);
       // -- prepare PeerConnection and send SDP --
-      preparePeer(ws, inMessage);
+      const downOnly = false;
+      preparePeer(ws, inMessage, downOnly);
       //NOT here, MUST USE Promise to sendOffer()
       //if (peerconnection) { 
       //  sendOffer(ws, peerconnection);
       //}
+    }
+    else if (inMessage.type === 'call_downstream') {
+      const downOnly = true;
+      preparePeer(ws, inMessage, downOnly);
     }
     else if (inMessage.type === 'offer') {
       console.log('got Offer from id=' + id);
@@ -106,7 +111,7 @@ function sendback(ws, message) {
 }
 
 // --- for v1.x ---
-function preparePeer(ws, message) {
+function preparePeer(ws, message, downOnly) {
   const id = getId(ws);
   const planb = message.planb;
   const capabilitySDP = message.capability;
@@ -129,7 +134,7 @@ function preparePeer(ws, message) {
     console.log('-- PeerConnection.negotiationneeded!! id=' + id);
 
     // --- send SDP here ---
-    sendOffer(ws, peerconnection);
+    sendOffer(ws, peerconnection, downOnly);
   });
 
   peerconnection.setCapabilities(capabilitySDP)
@@ -145,13 +150,16 @@ function preparePeer(ws, message) {
   })
 }
 
-function sendOffer(ws, peerconnection) {
+function sendOffer(ws, peerconnection, downOnly) {
   const id = getId(ws);
   console.log('offer to id=' + id);
-  peerconnection.createOffer({
-    offerToReceiveAudio : 1,
-    offerToReceiveVideo : 1
-  })
+  let offerOption = { offerToReceiveAudio : 1, offerToReceiveVideo : 1};
+  if (downOnly) {
+    offerOption.offerToReceiveAudio = 0;
+    offerOption.oofferToReceiveVideo = 0;
+  }
+
+  peerconnection.createOffer(offerOption)
   .then((desc) => {
     return peerconnection.setLocalDescription(desc);
   })
