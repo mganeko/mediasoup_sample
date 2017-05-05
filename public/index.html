@@ -21,6 +21,8 @@
   <div id="remote_container"></div>
 </body>
 <script type="text/javascript">
+  const useTrickleICE = false;
+
   let localVideo = document.getElementById('local_video');
   let remoteContainer = document.getElementById('remote_container');
   let stateSpan = document.getElementById('state_span');
@@ -180,7 +182,6 @@
         let stream = event.streams[0];
         logStream('remotestream of ontrack()', stream);
         if ( (stream.getVideoTracks().length > 0) && (stream.getAudioTracks().length > 0) ) {
-          //playVideo(remoteVideo, stream);
           addRemoteVideo(stream.id, stream);
         }
         
@@ -192,7 +193,6 @@
         let stream = event.stream;
         logStream('remotestream of onaddstream()', stream);
         
-        //playVideo(remoteVideo, stream);
         addRemoteVideo(stream.id, stream);
       };
     }
@@ -200,13 +200,26 @@
     peer.onicecandidate = function (evt) {
       if (evt.candidate) {
         console.log(evt.candidate);
-        // Trickle ICE の場合は、ICE candidateを相手に送る
-        // Vanilla ICE の場合には、何もしない
+        if (useTrickleICE) {
+          // Trickle ICE の場合は、ICE candidateを相手に送る
+          // send ICE candidate when using Trickle ICE
+          console.warn('NOT SUPPORTED YET');
+        }
+        else {
+          // Vanilla ICE の場合には、何もしない
+          // do NOTHING for Vanilla ICE
+        }
       } else {
         console.log('empty ice event');
-        // Trickle ICE の場合は、何もしない
-        // Vanilla ICE の場合には、ICE candidateを含んだSDPを相手に送る
-        sendSdp(peer.localDescription);
+        if (useTrickleICE) {
+          // Trickle ICE の場合は、何もしない
+          // do NOTHING for Trickle ICE
+        }
+        else {
+          // Vanilla ICE の場合には、ICE candidateを含んだSDPを相手に送る
+          // send SDP with ICE candidtes when using Vanilla ICE
+          sendSdp(peer.localDescription);
+        }
       }
     };
     // --- when need to exchange SDP ---
@@ -239,7 +252,6 @@
     peer.onremovestream = function(event) {
       console.log('-- peer.onremovestream()');
       let stream = event.stream;
-      //pauseVideo(remoteVideo);
       removeRemoteVideo(stream.id, stream);
     };
     
@@ -309,11 +321,20 @@
       return peerConnection.setLocalDescription(sessionDescription);
     }).then(function() {
       console.log('setLocalDescription() succsess in promise');
-      // -- Trickle ICE の場合は、初期SDPを相手に送る -- 
-      // -- Vanilla ICE の場合には、まだSDPは送らない --
-      //sendSdp(peerConnection.localDescription);
-      if (! waitForCandidates) {
-        sendSdp(peerConnection.localDescription);
+      if (useTrickleICE) {
+        // -- Trickle ICE の場合は、初期SDPを相手に送る --
+        // send initial SDP when using Trickle ICE
+        console.warn('NOT SUPPORTED YET');
+      }
+      else {
+        // -- Vanilla ICE の場合には、まだSDPは送らない --
+        // wait for ICE candidates for Vanilla ICE
+        //sendSdp(peerConnection.localDescription);
+
+        // if got re-offer, then NO MORE ice candidates will come, so send SDP right now
+        if (! waitForCandidates) {
+          sendSdp(peerConnection.localDescription);
+        }
       }
     }).catch(function(err) {
       console.error(err);
@@ -366,7 +387,6 @@
       peerConnection.close();
       peerConnection = null;
       
-      //pauseVideo(remoteVideo);
       removeAllRemoteVideo();
     }
     else {
