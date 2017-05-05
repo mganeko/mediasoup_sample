@@ -1,7 +1,7 @@
 {
   "name": "mediasoup_sample",
   "version": "1.0.0",
-  "description": "WebRTC SFU mediasoup sample",
+  "description": "WebRTC SFU mediasoup v1.1 sample",
   "main": "mediasoup_sample_multi.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

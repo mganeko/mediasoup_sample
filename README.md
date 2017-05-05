@@ -4,10 +4,12 @@ Multiple participants sample for WebRTC SFU mediasoup with node.js
 * mediasoup GitHub [https://github.com/ibc/mediasoup](https://github.com/ibc/mediasoup)
 * mediasoup Web site [https://mediasoup.org](https://mediasoup.org)
 * This sample has updated to support mediasoup v1.1. This does not work with mediasoup v0.x any more.
+* Now works correctly for 3 or more participans with Chrome/Firefox
 
 Node.jsで動くWebRTC SFU mediasoupのサンプルです。
 
 * v1.1用に更新しました。v0.xでは動作しません。
+* Chrome/Firefox共に3名以上の参加者の場合でも正しく動作するようになりました
 
 
 # Installation

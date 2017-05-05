@@ -1,5 +1,6 @@
 'use strict';
 
+// for v1.1
 module.exports =
 {
 	roomOptions :
