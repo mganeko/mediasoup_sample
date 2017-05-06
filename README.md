@@ -54,14 +54,18 @@ $ npm start
 サーバーを起動します。Webサーバー、WebSocketによるシグナリングサーバー、SFUサーバーを兼ねています。
 
 
-## access with borwser
+## access with browser
 
 ### bidirectional video chat  
 
 * open [http://localhost:3000/](http://localhost:3000/) with Chrome or Firefox.
 * click [Start Video] button, then [Connect] button
 
-ブラウザ(Chrome か Firefox)で [http://localhost:3000/](http://localhost:3000/) にアクセスします。
+双方向ビデオチャット
+
+* ブラウザ(Chrome か Firefox)で [http://localhost:3000/](http://localhost:3000/) にアクセスします。
+* [Start Video] ボタンをクリックしてカメラとマイクを取得し、 [Connect] ボタンで通信を開始します
+
 
 ### 1 way realtime streaming
 
@@ -70,4 +74,9 @@ $ npm start
 * open [http://localhost:3000/watch.html](http://localhost:3000/watch.html) with Chrome or Firefox.
 * click [Connect] button to watch realtime striming
 
-ブラウザ(Chrome か Firefox)で [http://localhost:3000/talk.html](http://localhost:3000/talk.html) にアクセスし、配信します。視聴は[http://localhost:3000/watch.html](http://localhost:3000/watch.html)から行います。
+1方向の映像配信/視聴
+
+* ブラウザ(Chrome か Firefox)で [http://localhost:3000/talk.html](http://localhost:3000/talk.html) にアクセスします
+* [Start Video] ボタンをクリックしてカメラとマイクを取得し、 [Connect] ボタンで配信を開始します
+* 視聴するには[http://localhost:3000/watch.html](http://localhost:3000/watch.html)にアクセスし、[Connect] ボタンをクリックします
+
