@@ -1,7 +1,7 @@
 # mediasoup_sample
-Multiple participants sample for WebRTC SFU mediasoup with node.js 
+Exsamples for WebRTC SFU mediasoup with node.js (Multiple participants / 1 way realtime streaming)
 
-* mediasoup GitHub [https://github.com/ibc/mediasoup](https://github.com/ibc/mediasoup)
+* mediasoup GitHub [https://github.com/versatica/mediasoup](https://github.com/versatica/mediasoup)
 * mediasoup Web site [https://mediasoup.org](https://mediasoup.org)
 * This sample has updated to support mediasoup v1.1. This does not work with mediasoup v0.x any more.
 * Now works correctly for 3 or more participans with Chrome/Firefox
