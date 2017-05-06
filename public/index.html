@@ -55,7 +55,6 @@
     if (message.type === 'response') {
       // --- not used ----
       console.warn('NOT USED');
-      //makeOffer();
     }
     if (message.type === 'offer') {
       // -- got offer ---
@@ -67,8 +66,6 @@
       // --- got answer ---
       console.log('Received answer ...');
       console.warn('NOT USED');
-      //let answer = new RTCSessionDescription(message);
-      //setAnswer(answer);
     }
   };
   
@@ -267,24 +264,6 @@
     return peer;
   }
 
-  /*---- NOT USED ---
-  function makeOffer() {
-    peerConnection = prepareNewConnection();
-    peerConnection.createOffer()
-    .then(function (sessionDescription) {
-      console.log('createOffer() succsess in promise');
-      return peerConnection.setLocalDescription(sessionDescription);
-    }).then(function() {
-      console.log('setLocalDescription() succsess in promise');
-      // -- Trickle ICE の場合は、初期SDPを相手に送る -- 
-      // -- Vanilla ICE の場合には、まだSDPは送らない --
-      //sendSdp(peerConnection.localDescription);
-    }).catch(function(err) {
-      console.error(err);
-    });
-  }
-  ---- NOT USED ---*/
-
   function setOffer(sessionDescription) {
     let waitForCandidates = true;
 
@@ -341,20 +320,6 @@
     });
   }
 
-  /*--- NOT USED --- 
-  function setAnswer(sessionDescription) {
-    if (! peerConnection) {
-      console.error('peerConnection NOT exist!');
-      return;
-    }
-    peerConnection.setRemoteDescription(sessionDescription)
-    .then(function() {
-      console.log('setRemoteDescription(answer) succsess in promise');
-    }).catch(function(err) {
-      console.error('setRemoteDescription(answer) ERROR: ', err);
-    });
-  }
-  ---- NOT USED --*/
   
   // start PeerConnection
   function connect() {
