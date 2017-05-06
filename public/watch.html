@@ -245,7 +245,8 @@
 
   function callWithCapabilitySDP() {
     peerConnection = prepareNewConnection();
-    peerConnection.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: true})
+    peerConnection.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: true}) // OK with Firefox
+    //peerConnection.createOffer() // NG with Firefox
     .then(function (sessionDescription) {
       console.log('createOffer() succsess in callWithCapabilitySDP()');
 

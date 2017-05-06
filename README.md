@@ -5,11 +5,13 @@ Multiple participants sample for WebRTC SFU mediasoup with node.js
 * mediasoup Web site [https://mediasoup.org](https://mediasoup.org)
 * This sample has updated to support mediasoup v1.1. This does not work with mediasoup v0.x any more.
 * Now works correctly for 3 or more participans with Chrome/Firefox
+* Add samples for 1 way realtime streaming. 
 
 Node.jsで動くWebRTC SFU mediasoupのサンプルです。
 
 * v1.1用に更新しました。v0.xでは動作しません。
 * Chrome/Firefox共に3名以上の参加者の場合でも正しく動作するようになりました
+* 1方向の映像配信/視聴のサンプルを追加しました
 
 
 # Installation
@@ -54,7 +56,18 @@ $ npm start
 
 ## access with borwser
 
+### bidirectional video chat  
+
 * open [http://localhost:3000/](http://localhost:3000/) with Chrome or Firefox.
 * click [Start Video] button, then [Connect] button
 
 ブラウザ(Chrome か Firefox)で [http://localhost:3000/](http://localhost:3000/) にアクセスします。
+
+### 1 way realtime streaming
+
+* open [http://localhost:3000/talk.html](http://localhost:3000/talk.html) with Chrome or Firefox.
+* click [Start Video] button, then [Connect] button
+* open [http://localhost:3000/watch.html](http://localhost:3000/watch.html) with Chrome or Firefox.
+* click [Connect] button to watch realtime striming
+
+ブラウザ(Chrome か Firefox)で [http://localhost:3000/talk.html](http://localhost:3000/talk.html) にアクセスし、配信します。視聴は[http://localhost:3000/watch.html](http://localhost:3000/watch.html)から行います。

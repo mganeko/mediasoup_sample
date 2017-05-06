@@ -75,16 +75,17 @@ wsServer.on('connection', function connection(ws) {
 
       //sendback(ws, message);
       // -- prepare PeerConnection and send SDP --
-      const downOnly = false;
-      preparePeer(ws, inMessage, downOnly);
+      const downOnlyRequested = false;
+      preparePeer(ws, inMessage, downOnlyRequested);
       //NOT here, MUST USE Promise to sendOffer()
       //if (peerconnection) { 
       //  sendOffer(ws, peerconnection);
       //}
     }
     else if (inMessage.type === 'call_downstream') {
-      const downOnly = true;
-      preparePeer(ws, inMessage, downOnly);
+      // -- requested down stream only (for watching realtime-streaming) --
+      const downOnlyRequested = true;
+      preparePeer(ws, inMessage, downOnlyRequested);
     }
     else if (inMessage.type === 'offer') {
       console.log('got Offer from id=' + id);
