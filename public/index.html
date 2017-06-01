@@ -270,8 +270,10 @@
     if (peerConnection) {
       console.log('peerConnection alreay exist, reuse it');
       if (peerConnection.remoteDescription && (peerConnection.remoteDescription.type === 'offer')) {
-        // got re-offer, so DO NOT wait for candidates even using Vanilla ICE
-        waitForCandidates = false;
+        // got re-offer, so DO NOT wait for candidates even using Vanilla ICE, if using Chrome (plan B)
+        if (getUsePlanB()) {
+          waitForCandidates = false;
+        }
       }
     }
     else {
