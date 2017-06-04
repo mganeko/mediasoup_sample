@@ -1,0 +1,502 @@
+<!doctype html>
+<html>
+<head>
+ <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+ <title>mediasoup test socketio</title>
+ <script src="http://localhost:3000/socket.io/socket.io.js"></script>
+</head>
+<body>
+  mediasoup multi with socket.io<br />
+  <button id="start_video_button" onclick="startVideo();">Start Video</button>
+  <button id="stop_video_button" onclick="stopVideo();">Stop Video</button>
+  &nbsp;
+  <button id="connect_button"  onclick="connect();">Connect</button>
+  <button id="disconnect_button"  onclick="dissconnect();">Disconnect</button> 
+  <input type="checkbox" id="plan_b_check" >planB</input> 
+  <div>
+    local video<br />
+    <video id="local_video" autoplay style="width: 160px; height: 120px; border: 1px solid black;"></video>
+    <span id="state_span"></span>
+  </div>
+  remote video<br />
+  <div id="remote_container"></div>
+</body>
+<script type="text/javascript">
+  const useTrickleICE = false;
+
+  let localVideo = document.getElementById('local_video');
+  let remoteContainer = document.getElementById('remote_container');
+  let stateSpan = document.getElementById('state_span');
+  let localStream = null;
+  let peerConnection = null;
+  
+  // --- prefix -----
+  navigator.getUserMedia  = navigator.getUserMedia    || navigator.webkitGetUserMedia ||
+                            navigator.mozGetUserMedia || navigator.msGetUserMedia;
+  RTCPeerConnection = window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection;
+  RTCSessionDescription = window.RTCSessionDescription || window.webkitRTCSessionDescription || window.mozRTCSessionDescription;
+
+  // init checkbox
+  if (window.window.webkitRTCPeerConnection) {
+    document.getElementById('plan_b_check').checked = true;
+  }
+
+  // ----- use socket.io ---
+  const port = 3000;
+  const socket = io.connect('http://localhost:' + port + '/');
+  socket.on('connect', function(evt) {
+    //console.log('socket.io connected. enter room=' + room );
+    //socket.emit('enter', room);
+    console.log('socket.io connected()');
+  });
+  socket.on('error', function(err) {
+    console.error('socket.io ERROR:', err);
+  });
+  socket.on('disconnect', function(evt) {
+    console.log('socket.io disconnect:', evt);
+  });
+  socket.on('message', function(message) {
+    console.log('message:', message);
+  
+    if (message.type === 'response') {
+      // --- not used ----
+      console.warn('NOT USED');
+    }
+    if (message.type === 'offer') {
+      // -- got offer ---
+      console.log('Received offer ...');
+      let offer = new RTCSessionDescription(message);
+      setOffer(offer);
+    }
+    else if (message.type === 'answer') {
+      // --- got answer ---
+      console.log('Received answer ...');
+      console.warn('NOT USED');
+    }
+  });
+
+  /* ===
+  // -------- websocket ----  
+  let wsUrl = 'ws://localhost:3001/';
+  let ws = new WebSocket(wsUrl);
+  ws.onopen = function(evt) {
+    console.log('ws open()');
+  };
+  ws.onerror = function(err) {
+    console.error('ws onerror() ERR:', err);
+  };
+  ws.onmessage = function(evt) {
+    console.log('ws onmessage() data:', evt.data);
+    let message = JSON.parse(evt.data);
+    if (message.type === 'response') {
+      // --- not used ----
+      console.warn('NOT USED');
+    }
+    if (message.type === 'offer') {
+      // -- got offer ---
+      console.log('Received offer ...');
+      let offer = new RTCSessionDescription(message);
+      setOffer(offer);
+    }
+    else if (message.type === 'answer') {
+      // --- got answer ---
+      console.log('Received answer ...');
+      console.warn('NOT USED');
+    }
+  };
+  === */
+  
+  function getUsePlanB() {
+    let checkbox = document.getElementById('plan_b_check');
+    return (checkbox.checked === true);
+  }
+
+  // ---------------------- media handling ----------------------- 
+  // start local video
+  function startVideo() {
+    getDeviceStream({video: true, audio: true})
+    .then(function (stream) { // success
+      localStream = stream;
+      logStream('localstream', stream);
+      playVideo(localVideo, stream);
+      
+      updateButtons();
+    }).catch(function (error) { // error
+      console.error('getUserMedia error:', error);
+      return;
+    });
+  }
+  // stop local video
+  function stopVideo() {
+    pauseVideo(localVideo);
+    stopLocalStream(localStream);
+    localStream = null;
+
+    updateButtons();
+  }
+
+  function stopLocalStream(stream) {
+    let tracks = stream.getTracks();
+    if (! tracks) {
+      console.warn('NO tracks');
+      return;
+    }
+    
+    for (let track of tracks) {
+      track.stop();
+    }
+  }
+  
+  function getDeviceStream(option) {
+    if ('getUserMedia' in navigator.mediaDevices) {
+      console.log('navigator.mediaDevices.getUserMadia');
+      return navigator.mediaDevices.getUserMedia(option);
+    }
+    else {
+      console.log('wrap navigator.getUserMadia with Promise');
+      return new Promise(function(resolve, reject){    
+        navigator.getUserMedia(option,
+          resolve,
+          reject
+        );
+      });      
+    }
+  }
+  function playVideo(element, stream) {
+    if ('srcObject' in element) {
+      element.srcObject = stream;
+    }
+    else {
+      element.src = window.URL.createObjectURL(stream);
+    }
+    element.play();
+    element.volume = 0;
+  }
+  function pauseVideo(element) {
+    element.pause();
+    if ('srcObject' in element) {
+      element.srcObject = null;
+    }
+    else {
+      if (element.src && (element.src !== '') ) {
+        window.URL.revokeObjectURL(element.src);
+      }
+      element.src = '';
+    }
+  }
+
+  // -----  signaling ----
+ 
+  function sendSdp(sessionDescription) {
+    console.log('---sending sdp ---');
+    const jsonSDP = sessionDescription.toJSON();
+    jsonSDP.planb = getUsePlanB();
+    console.log('sending SDP:', jsonSDP);
+
+    sendJson(jsonSDP);
+  }
+
+  function sendJson(json) {
+    // -- socket.io --
+    socket.json.send(json);
+
+    // --- websocket --
+    //const message = JSON.stringify(json);
+    //ws.send(message);  
+  }
+
+  // ---------------------- connection handling -----------------------
+  function prepareNewConnection() {
+    let pc_config = {"iceServers":[]};
+    let peer = new RTCPeerConnection(pc_config);
+    // --- on get remote stream ---
+    if ('ontrack' in peer) {
+      peer.ontrack = function(event) {
+        console.log('-- peer.ontrack()');
+        let stream = event.streams[0];
+        logStream('remotestream of ontrack()', stream);
+        if ( (stream.getVideoTracks().length > 0) && (stream.getAudioTracks().length > 0) ) {
+          addRemoteVideo(stream.id, stream);
+        }
+        
+      };
+    }
+    else {
+      peer.onaddstream = function(event) {
+        console.log('-- peer.onaddstream()');
+        let stream = event.stream;
+        logStream('remotestream of onaddstream()', stream);
+        
+        addRemoteVideo(stream.id, stream);
+      };
+    }
+    // --- on get local ICE candidate
+    peer.onicecandidate = function (evt) {
+      if (evt.candidate) {
+        console.log(evt.candidate);
+        if (useTrickleICE) {
+          // Trickle ICE の場合は、ICE candidateを相手に送る
+          // send ICE candidate when using Trickle ICE
+          console.warn('NOT SUPPORTED YET');
+        }
+        else {
+          // Vanilla ICE の場合には、何もしない
+          // do NOTHING for Vanilla ICE
+        }
+      } else {
+        console.log('empty ice event');
+        if (useTrickleICE) {
+          // Trickle ICE の場合は、何もしない
+          // do NOTHING for Trickle ICE
+        }
+        else {
+          // Vanilla ICE の場合には、ICE candidateを含んだSDPを相手に送る
+          // send SDP with ICE candidtes when using Vanilla ICE
+          sendSdp(peer.localDescription);
+        }
+      }
+    };
+    // --- when need to exchange SDP ---
+    peer.onnegotiationneeded = function(evt) {
+      console.log('-- onnegotiationneeded() ---');
+      console.warn('--- IGNORE ---');
+    };
+    // --- other events ----
+    peer.onicecandidateerror = function (evt) {
+      console.error('ICE candidate ERROR:', evt);
+    };
+    peer.onsignalingstatechange = function() {
+      console.log('== signaling state=' + peer.signalingState);
+    };
+    peer.oniceconnectionstatechange = function() {
+      console.log('== ice connection state=' + peer.iceConnectionState);
+      showState('ice connection state=' + peer.iceConnectionState);
+      if (peer.iceConnectionState === 'disconnected') {
+        console.log('-- disconnected --');
+        dissconnect();
+      }
+    };
+    peer.onicegatheringstatechange = function() {
+      console.log('==***== ice gathering state=' + peer.iceGatheringState);
+    };
+    
+    peer.onconnectionstatechange = function() {
+      console.log('==***== connection state=' + peer.connectionState);
+    };
+    peer.onremovestream = function(event) {
+      console.log('-- peer.onremovestream()');
+      let stream = event.stream;
+      removeRemoteVideo(stream.id, stream);
+    };
+    
+    
+    // -- add local stream --
+    if (localStream) {
+      console.log('Adding local stream...');
+      peer.addStream(localStream);
+    }
+    else {
+      console.warn('no local stream, but continue.');
+    }
+    return peer;
+  }
+
+  function setOffer(sessionDescription) {
+    let waitForCandidates = true;
+
+    if (peerConnection) {
+      console.log('peerConnection alreay exist, reuse it');
+      if (peerConnection.remoteDescription && (peerConnection.remoteDescription.type === 'offer')) {
+        // got re-offer, so DO NOT wait for candidates even using Vanilla ICE, if using Chrome (plan B)
+        if (getUsePlanB()) {
+          waitForCandidates = false;
+        }
+      }
+    }
+    else {
+      console.log('prepare new PeerConnection');
+      peerConnection = prepareNewConnection();
+    }
+    peerConnection.setRemoteDescription(sessionDescription)
+    .then(function() {
+      console.log('setRemoteDescription(offer) succsess in promise');
+      makeAnswer(waitForCandidates);
+    }).catch(function(err) {
+      console.error('setRemoteDescription(offer) ERROR: ', err);
+    });
+  }
+  
+  function makeAnswer(waitForCandidates) {
+    console.log('sending Answer. Creating remote session description...' );
+    if (! peerConnection) {
+      console.error('peerConnection NOT exist!');
+      return;
+    }
+    
+    peerConnection.createAnswer()
+    .then(function (sessionDescription) {
+      console.log('createAnswer() succsess in promise');
+      return peerConnection.setLocalDescription(sessionDescription);
+    }).then(function() {
+      console.log('setLocalDescription() succsess in promise');
+      if (useTrickleICE) {
+        // -- Trickle ICE の場合は、初期SDPを相手に送る --
+        // send initial SDP when using Trickle ICE
+        console.warn('NOT SUPPORTED YET');
+      }
+      else {
+        // -- Vanilla ICE の場合には、まだSDPは送らない --
+        // wait for ICE candidates for Vanilla ICE
+        //sendSdp(peerConnection.localDescription);
+
+        // if got re-offer, then NO MORE ice candidates will come, so send SDP right now
+        if (! waitForCandidates) {
+          sendSdp(peerConnection.localDescription);
+        }
+      }
+    }).catch(function(err) {
+      console.error(err);
+    });
+  }
+
+  
+  // start PeerConnection
+  function connect() {
+    callWithCapabilitySDP();
+
+    updateButtons();
+  }
+
+  function callWithCapabilitySDP() {
+    peerConnection = prepareNewConnection();
+    peerConnection.createOffer()
+    .then(function (sessionDescription) {
+      console.log('createOffer() succsess in callWithCapabilitySDP()');
+
+      // WITHOUT setLocalDesctiption(), and send to server
+      console.log('calling with Capalibity SDP ..');
+      sendJson({type: "call", planb: getUsePlanB(), capability: sessionDescription.sdp});
+    })
+    .catch(function(err) {
+      console.error('ERROR in callWithCapabilitySDP():', err);
+    });
+  }
+  
+  // close PeerConnection
+  function dissconnect() {
+    sendJson({type: "bye"});
+    
+    if (peerConnection) {
+      console.log('Hang up.');
+      peerConnection.close();
+      peerConnection = null;
+      
+      removeAllRemoteVideo();
+    }
+    else {
+      console.warn('peer NOT exist.');
+    }
+
+    updateButtons();
+  }
+  
+  function showState(state) {
+    stateSpan.innerText = state;
+  }
+
+  function logStream(msg, stream) {
+    console.log(msg + ': id=' + stream.id);
+
+    let videoTracks = stream.getVideoTracks();
+    if (videoTracks) {
+    console.log('videoTracks.length=' + videoTracks.length);
+    videoTracks.forEach(function(track) {
+      console.log(' track.id=' + track.id);
+    });
+    }
+    
+    let audioTracks = stream.getAudioTracks();
+    if (audioTracks) {
+    console.log('audioTracks.length=' + audioTracks.length);
+    audioTracks.forEach(function(track) {
+      console.log(' track.id=' + track.id);
+    });
+    }
+  }
+ 
+  function addRemoteVideo(id, stream) {
+    let element = document.createElement('video');
+    remoteContainer.appendChild(element);
+    element.id = 'remote_' + id;
+    element.width = 320;
+    element.height = 240;
+    element.srcObject = stream;
+    element.play();
+    element.volume = 0;
+    element.controls = true;
+  }
+  
+  function removeRemoteVideo(id, stream) {
+    console.log(' ---- removeRemoteVideo() id=' + id);
+    let element = document.getElementById('remote_' + id);
+    if (element) {
+      element.pause();
+      element.srcObject = null;
+      remoteContainer.removeChild(element);
+    }
+    else {
+      console.log('child element NOT FOUND');
+    }
+  }
+
+  function removeAllRemoteVideo() {
+    while (remoteContainer.firstChild) {
+      remoteContainer.firstChild.pause();
+      remoteContainer.firstChild.srcObject = null;
+      remoteContainer.removeChild(remoteContainer.firstChild);
+    }
+  }
+
+  function updateButtons() {
+    if (peerConnection) {
+      disableElement('start_video_button');
+      disableElement('stop_video_button');
+      disableElement('connect_button');
+      enabelElement('disconnect_button');
+      disableElement('plan_b_check');
+    }
+    else {
+      if (localStream) {
+        disableElement('start_video_button');
+        enabelElement('stop_video_button');
+        enabelElement('connect_button');
+      }
+      else {
+        enabelElement('start_video_button');
+        disableElement('stop_video_button');
+        disableElement('connect_button');        
+      }
+
+      disableElement('disconnect_button');
+      enabelElement('plan_b_check');
+    }
+  }
+
+  function enabelElement(id) {
+    let element = document.getElementById(id);
+    if (element) {
+      element.removeAttribute('disabled');
+    }
+  }
+
+  function disableElement(id) {
+    let element = document.getElementById(id);
+    if (element) {
+      element.setAttribute('disabled', '1');
+    }    
+  }
+
+  updateButtons();
+  console.log('=== ready ==='); 
+</script>
+</html>
