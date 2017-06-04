@@ -1,3 +1,11 @@
+//
+// mediasoup_sample
+//   https://github.com/mganeko/mediasoup_sample
+//   mediasoup_sample is provided under MIT license
+//
+//   This sample is using https://github.com/versatica/mediasoup
+//
+
 'use strict';
 
 const SSL_KEY = 'cert/server.key';

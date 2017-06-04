@@ -133,3 +133,8 @@ or
 
 * https://_yourserver.com:3000_/index_socketio.html
 
+
+# License / ライセンス
+
+* This samples are under the MIT license
+* このサンプルはMITランセンスで提供されます
