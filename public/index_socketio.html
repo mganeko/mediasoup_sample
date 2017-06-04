@@ -3,7 +3,8 @@
 <head>
  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
  <title>mediasoup test socketio</title>
- <script src="http://localhost:3000/socket.io/socket.io.js"></script>
+ <!-- <script src="http://localhost:3000/socket.io/socket.io.js"></script> --> 
+ <script src="socket.io/socket.io.js"></script>
 </head>
 <body>
   mediasoup multi with socket.io<br />
@@ -43,7 +44,8 @@
 
   // ----- use socket.io ---
   const port = 3000;
-  const socket = io.connect('http://localhost:' + port + '/');
+  //const socket = io.connect('http://localhost:' + port + '/');
+  const socket = io.connect('/');
   socket.on('connect', function(evt) {
     //console.log('socket.io connected. enter room=' + room );
     //socket.emit('enter', room);
