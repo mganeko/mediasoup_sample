@@ -165,7 +165,10 @@
       console.log('== ice connection state=' + peer.iceConnectionState);
       showState('ice connection state=' + peer.iceConnectionState);
       if (peer.iceConnectionState === 'disconnected') {
-        console.log('-- disconnected --');
+        console.log('-- disconnected, but wait for re-connect --');
+      }
+      else if (peer.iceConnectionState === 'failed') {
+        console.log('-- failed, so give up --');
         dissconnect();
       }
     };
