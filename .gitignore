@@ -35,6 +35,7 @@ jspm_packages
 down.html
 up.html
 mediasoup_sample_cast.js
+mediasoup_sample_multi_toggle.js
 trial
 
 # Optional npm cache directory
