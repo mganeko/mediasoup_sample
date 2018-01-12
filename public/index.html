@@ -48,7 +48,9 @@
   }
 
   // -------- websocket ----  
-  let wsUrl = 'ws://localhost:3001/';
+  //let wsUrl = 'ws://localhost:3001/';
+  let wsPort = 3001;
+  let wsUrl = 'ws://' +  window.location.hostname + ':' + wsPort + '/';
   let ws = new WebSocket(wsUrl);
   ws.onopen = function(evt) {
     console.log('ws open()');
