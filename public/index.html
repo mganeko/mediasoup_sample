@@ -48,7 +48,9 @@
   }
 
   // -------- websocket ----  
-  let wsUrl = 'ws://localhost:3001/';
+  //let wsUrl = 'ws://localhost:3001/';
+  let wsPort = 3001;
+  let wsUrl = 'ws://' +  window.location.hostname + ':' + wsPort + '/';
   let ws = new WebSocket(wsUrl);
   ws.onopen = function(evt) {
     console.log('ws open()');
@@ -408,6 +410,11 @@
   }
  
   function addRemoteVideo(id, stream) {
+    if (findRemoteVideo(id)) {
+      console.warn('remoteVideo element ALREADY exist for id=' + id);
+      return;
+    }
+    
     let element = document.createElement('video');
     remoteContainer.appendChild(element);
     element.id = 'remote_' + id;
@@ -419,6 +426,11 @@
     element.controls = true;
   }
   
+  function findRemoteVideo(id) {
+    let element = document.getElementById('remote_' + id);
+    return element;
+  }
+
   function removeRemoteVideo(id, stream) {
     console.log(' ---- removeRemoteVideo() id=' + id);
     let element = document.getElementById('remote_' + id);
