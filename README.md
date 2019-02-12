@@ -1,6 +1,8 @@
 # mediasoup_sample
 Examples for WebRTC SFU mediasoup with node.js (Multiple participants / 1 way realtime streaming)
 
+NOTE: This sample made for mediasoup v1.x. For mediasoup v2.x, please see another sample [mediasoup_sample_v2](https://github.com/mganeko/mediasoup_sample_v2)
+
 * mediasoup GitHub [https://github.com/versatica/mediasoup](https://github.com/versatica/mediasoup)
 * mediasoup Web site [https://mediasoup.org](https://mediasoup.org)
 * This sample has updated to support mediasoup v1.1. This does not work with mediasoup v0.x any more.
